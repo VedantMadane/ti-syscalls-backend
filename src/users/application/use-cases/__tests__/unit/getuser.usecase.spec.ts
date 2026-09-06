@@ -1,0 +1,96 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { GetUserUseCase } from '../../getuser.usecase';
+import { InMemoryUserRepository } from '../../../../infrastructure/repositories/in-memory-user.repository';
+import { User, UserRole } from '../../../../domain/entities/user.entity';
+
+describe('GetUserUseCase Unit Tests', () => {
+  let useCase: GetUserUseCase;
+  let repository: InMemoryUserRepository;
+  let user: User;
+
+  beforeEach(() => {
+    repository = new InMemoryUserRepository();
+    useCase = new GetUserUseCase(repository);
+    user = User.create({
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      password: 'securePassword123',
+    });
+    repository.insert(user);
+  });
+
+  describe('execute - success cases', () => {
+    it('should return the user found by id', async () => {
+      const output = await useCase.execute(user.getId());
+
+      expect(output).toBe(user);
+    });
+
+    it('should return a user with the expected data', async () => {
+      const output = await useCase.execute(user.getId());
+
+      expect(output.getId()).toBe(user.getId());
+      expect(output.getName()).toBe('John Doe');
+      expect(output.getEmail()).toBe('john.doe@example.com');
+      expect(output.getRole()).toBe(UserRole.USER);
+    });
+
+    it('should call the repository findById with the given id', async () => {
+      const spy = jest.spyOn(repository, 'findById');
+
+      await useCase.execute(user.getId());
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(user.getId());
+    });
+
+    it('should return the correct user when multiple users are persisted', async () => {
+      const other = User.create({
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        password: 'anotherPassword123',
+      });
+      await repository.insert(other);
+
+      const output = await useCase.execute(other.getId());
+
+      expect(output).toBe(other);
+      expect(output.getId()).not.toBe(user.getId());
+    });
+  });
+
+  describe('execute - error cases', () => {
+    it('should throw an error when the user does not exist', async () => {
+      await expect(useCase.execute('unknown-id')).rejects.toThrow(
+        'User not found',
+      );
+    });
+
+    it('should throw an error when the repository returns null', async () => {
+      const emptyRepository = new InMemoryUserRepository();
+      const emptyUseCase = new GetUserUseCase(emptyRepository);
+
+      await expect(emptyUseCase.execute('any-id')).rejects.toThrow(
+        'User not found',
+      );
+    });
+
+    it('should throw an error for a valid but unknown uuid', async () => {
+      const unknownId = '00000000-0000-4000-8000-000000000000';
+
+      await expect(useCase.execute(unknownId)).rejects.toThrow(
+        'User not found',
+      );
+    });
+
+    it('should not call findById more than once when the user is not found', async () => {
+      const spy = jest.spyOn(repository, 'findById');
+
+      await expect(useCase.execute('unknown-id')).rejects.toThrow(
+        'User not found',
+      );
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
+});
