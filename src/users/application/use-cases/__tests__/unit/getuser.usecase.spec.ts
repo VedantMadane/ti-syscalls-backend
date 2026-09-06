@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { GetUserUseCase } from '../../getuser.usecase';
+import { GetUserUseCase, GetUserUseCaseInput } from '../../getuser.usecase';
 import { InMemoryUserRepository } from '../../../../infrastructure/repositories/in-memory-user.repository';
 import { User, UserRole } from '../../../../domain/entities/user.entity';
 import { NotFoundException } from '../../../errors/NotFoundException.error';
@@ -20,15 +20,19 @@ describe('GetUserUseCase Unit Tests', () => {
     repository.insert(user);
   });
 
+  const validInput = (): GetUserUseCaseInput => ({
+    id: user.getId(),
+  });
+
   describe('execute - success cases', () => {
     it('should return the user found by id', async () => {
-      const output = await useCase.execute(user.getId());
+      const output = await useCase.execute(validInput());
 
       expect(output).toBe(user);
     });
 
     it('should return a user with the expected data', async () => {
-      const output = await useCase.execute(user.getId());
+      const output = await useCase.execute(validInput());
 
       expect(output.getId()).toBe(user.getId());
       expect(output.getName()).toBe('John Doe');
@@ -38,11 +42,12 @@ describe('GetUserUseCase Unit Tests', () => {
 
     it('should call the repository findById with the given id', async () => {
       const spy = jest.spyOn(repository, 'findById');
+      const input = validInput();
 
-      await useCase.execute(user.getId());
+      await useCase.execute(input);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(user.getId());
+      expect(spy).toHaveBeenCalledWith(input.id);
     });
 
     it('should return the correct user when multiple users are persisted', async () => {
@@ -53,7 +58,7 @@ describe('GetUserUseCase Unit Tests', () => {
       });
       await repository.insert(other);
 
-      const output = await useCase.execute(other.getId());
+      const output = await useCase.execute({ id: other.getId() });
 
       expect(output).toBe(other);
       expect(output.getId()).not.toBe(user.getId());
@@ -62,13 +67,13 @@ describe('GetUserUseCase Unit Tests', () => {
 
   describe('execute - error cases', () => {
     it('should throw NotFoundException when the user does not exist', async () => {
-      await expect(useCase.execute('unknown-id')).rejects.toThrow(
+      await expect(useCase.execute({ id: 'unknown-id' })).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw NotFoundException with the expected message', async () => {
-      await expect(useCase.execute('unknown-id')).rejects.toEqual(
+      await expect(useCase.execute({ id: 'unknown-id' })).rejects.toEqual(
         expect.objectContaining({
           name: 'DomainError',
           message: 'User not found',
@@ -80,7 +85,7 @@ describe('GetUserUseCase Unit Tests', () => {
       const emptyRepository = new InMemoryUserRepository();
       const emptyUseCase = new GetUserUseCase(emptyRepository);
 
-      await expect(emptyUseCase.execute('any-id')).rejects.toThrow(
+      await expect(emptyUseCase.execute({ id: 'any-id' })).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -88,7 +93,7 @@ describe('GetUserUseCase Unit Tests', () => {
     it('should throw NotFoundException for a valid but unknown uuid', async () => {
       const unknownId = '00000000-0000-4000-8000-000000000000';
 
-      await expect(useCase.execute(unknownId)).rejects.toThrow(
+      await expect(useCase.execute({ id: unknownId })).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -96,7 +101,7 @@ describe('GetUserUseCase Unit Tests', () => {
     it('should not call findById more than once when the user is not found', async () => {
       const spy = jest.spyOn(repository, 'findById');
 
-      await expect(useCase.execute('unknown-id')).rejects.toThrow(
+      await expect(useCase.execute({ id: 'unknown-id' })).rejects.toThrow(
         NotFoundException,
       );
 
