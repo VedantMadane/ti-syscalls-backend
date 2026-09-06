@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { GetUserUseCase } from '../../getuser.usecase';
 import { InMemoryUserRepository } from '../../../../infrastructure/repositories/in-memory-user.repository';
 import { User, UserRole } from '../../../../domain/entities/user.entity';
+import { NotFoundException } from '../../../errors/NotFoundException.error';
 
 describe('GetUserUseCase Unit Tests', () => {
   let useCase: GetUserUseCase;
@@ -60,26 +61,35 @@ describe('GetUserUseCase Unit Tests', () => {
   });
 
   describe('execute - error cases', () => {
-    it('should throw an error when the user does not exist', async () => {
+    it('should throw NotFoundException when the user does not exist', async () => {
       await expect(useCase.execute('unknown-id')).rejects.toThrow(
-        'User not found',
+        NotFoundException,
       );
     });
 
-    it('should throw an error when the repository returns null', async () => {
+    it('should throw NotFoundException with the expected message', async () => {
+      await expect(useCase.execute('unknown-id')).rejects.toEqual(
+        expect.objectContaining({
+          name: 'DomainError',
+          message: 'User not found',
+        }),
+      );
+    });
+
+    it('should throw NotFoundException when the repository returns null', async () => {
       const emptyRepository = new InMemoryUserRepository();
       const emptyUseCase = new GetUserUseCase(emptyRepository);
 
       await expect(emptyUseCase.execute('any-id')).rejects.toThrow(
-        'User not found',
+        NotFoundException,
       );
     });
 
-    it('should throw an error for a valid but unknown uuid', async () => {
+    it('should throw NotFoundException for a valid but unknown uuid', async () => {
       const unknownId = '00000000-0000-4000-8000-000000000000';
 
       await expect(useCase.execute(unknownId)).rejects.toThrow(
-        'User not found',
+        NotFoundException,
       );
     });
 
@@ -87,7 +97,7 @@ describe('GetUserUseCase Unit Tests', () => {
       const spy = jest.spyOn(repository, 'findById');
 
       await expect(useCase.execute('unknown-id')).rejects.toThrow(
-        'User not found',
+        NotFoundException,
       );
 
       expect(spy).toHaveBeenCalledTimes(1);
