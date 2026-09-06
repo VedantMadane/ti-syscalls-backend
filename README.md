@@ -65,15 +65,15 @@ The code is organized so that:
 2. **Application** orchestrates use cases against domain ports.
 3. **Infrastructure** adapts NestJS, in-memory storage, and bcrypt to those ports.
 
-Presentation is not a separate top-level folder. HTTP controllers live under `infrastructure`, which is how NestJS modules are currently composed.
+Presentation is not a separate top-level folder. HTTP controllers and the NestJS `UsersService` live under `infrastructure`, which is how NestJS modules are currently composed.
 
 ```mermaid
 flowchart TB
   client[HTTP client] --> presentation[UsersController]
-  presentation --> appService[UsersService]
+  presentation --> nestService[UsersService]
   presentation -.-> useCases[SingUpUseCase]
 
-  appService --> domain[User / Email]
+  nestService --> domain[User / Email]
   useCases --> domain
   useCases --> repoPort[UserRepository / SearchableUserRepository]
   useCases --> hashPort[HashProvider]
@@ -93,12 +93,13 @@ flowchart TB
 
   subgraph infrastructureLayer [Infrastructure]
     presentation
+    nestService
     repoImpl
     hashImpl
   end
 ```
 
-`UsersService` is the path the controller actually calls. `SingUpUseCase` is implemented and tested, but `UsersModule` does not register it yet. The dashed arrow is the intended flow, not the current HTTP wiring.
+`UsersService` is a NestJS provider in infrastructure — the path the controller actually calls. Application logic for signup lives in `SingUpUseCase`, which is implemented and tested, but `UsersModule` does not register it yet. The dashed arrow is the intended flow, not the current HTTP wiring.
 
 ### How dependencies flow
 
@@ -106,7 +107,7 @@ flowchart TB
 - Shared repository ports in `src/shared/domain/repositories` only talk about entities, ids, filters, and pagination.
 - Application code depends on those ports, not on a storage engine.
 - Infrastructure implements the ports: `InMemoryUserRepository`, `InMemorySearchableUserRepository`, `BcryptHashProvider`.
-- NestJS stays at the edges: `AppModule`, `UsersModule`, controllers, and the generated `UsersService` provider.
+- NestJS stays at the edges: `AppModule`, `UsersModule`, controllers, and `UsersService`.
 
 That is the dependency rule in practice: domain does not know how it is stored or exposed.
 
@@ -130,8 +131,7 @@ src/
 └── users/
     ├── application/
     │   ├── errors/
-    │   ├── use-cases/             SingUpUseCase
-    │   └── users.service.ts
+    │   └── use-cases/             SingUpUseCase
     ├── domain/
     │   ├── entities/              User, UserRole
     │   ├── errors/
@@ -142,6 +142,7 @@ src/
         ├── providers/hash-provider/
         ├── repositories/          in-memory adapters
         ├── users.controller.ts
+        ├── users.service.ts
         └── users.module.ts
 ```
 
@@ -382,7 +383,7 @@ Domain and use-case tests talk to in-memory repositories and, for signup, a fake
 Current gaps that follow from those choices, not from a different architecture:
 
 - `UsersModule` does not bind repository or hash-provider implementations.
-- `UsersService` still imports infrastructure DTOs and does not persist.
+- `UsersService` does not persist and does not call `SingUpUseCase`.
 
 ## Roadmap
 
