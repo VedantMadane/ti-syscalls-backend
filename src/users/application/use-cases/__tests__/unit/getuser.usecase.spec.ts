@@ -28,16 +28,19 @@ describe('GetUserUseCase Unit Tests', () => {
     it('should return the user found by id', async () => {
       const output = await useCase.execute(validInput());
 
-      expect(output).toBe(user);
+      expect(output.id).toBe(user.getId());
+      expect(output.name).toBe(user.getName());
+      expect(output.email).toBe(user.getEmail());
+      expect(output.role).toBe(user.getRole());
     });
 
     it('should return a user with the expected data', async () => {
       const output = await useCase.execute(validInput());
 
-      expect(output.getId()).toBe(user.getId());
-      expect(output.getName()).toBe('John Doe');
-      expect(output.getEmail()).toBe('john.doe@example.com');
-      expect(output.getRole()).toBe(UserRole.USER);
+      expect(output.id).toBe(user.getId());
+      expect(output.name).toBe('John Doe');
+      expect(output.email).toBe('john.doe@example.com');
+      expect(output.role).toBe(UserRole.USER);
     });
 
     it('should call the repository findById with the given id', async () => {
@@ -60,8 +63,10 @@ describe('GetUserUseCase Unit Tests', () => {
 
       const output = await useCase.execute({ id: other.getId() });
 
-      expect(output).toBe(other);
-      expect(output.getId()).not.toBe(user.getId());
+      expect(output.id).toBe(other.getId());
+      expect(output.name).toBe(other.getName());
+      expect(output.email).toBe(other.getEmail());
+      expect(output.role).toBe(other.getRole());
     });
   });
 
