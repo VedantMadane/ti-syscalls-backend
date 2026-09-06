@@ -3,6 +3,7 @@ import { BadRequestException } from '../errors/BadRequestExeption.error';
 import { SearchableUserRepository } from 'src/users/domain/repositories/searchable-user.repository';
 import { User } from 'src/users/domain/entities/user.entity';
 import { HashProvider } from 'src/shared/application/providers/hash.provider';
+import { OutputUserDto } from 'src/users/presentation/outputuser.dto';
 
 export type SingUpUseCaseInput = {
   name: string;
@@ -10,19 +11,12 @@ export type SingUpUseCaseInput = {
   password: string;
 };
 
-export type SingUpUseCaseOutput = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-};
-
 export class SingUpUseCase {
   constructor(
     private readonly userRepository: SearchableUserRepository,
     private readonly hashProvider: HashProvider,
   ) {}
-  async execute(input: SingUpUseCaseInput): Promise<SingUpUseCaseOutput> {
+  async execute(input: SingUpUseCaseInput): Promise<OutputUserDto> {
     if (!input.name || !input.email || !input.password) {
       throw new BadRequestException('Missing required fields', input);
     }
