@@ -1,12 +1,17 @@
-import { User } from 'src/users/domain/entities/user.entity';
 import { UserRepository } from 'src/users/domain/repositories/user.repository';
+import { OutputUserDto } from 'src/users/presentation/outputuser.dto';
 
-export type FindAllUsersUseCaseOutput = User[];
+export type FindAllUsersUseCaseOutput = OutputUserDto[];
 
 export class FindAllUsersUseCase {
   constructor(private readonly userRepository: UserRepository) {}
   async execute(): Promise<FindAllUsersUseCaseOutput> {
     const users = await this.userRepository.findAll();
-    return users;
+    return users.map((user) => ({
+      id: user.getId(),
+      name: user.getName(),
+      email: user.getEmail(),
+      role: user.getRole(),
+    }));
   }
 }
