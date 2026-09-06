@@ -204,7 +204,7 @@ This use case is covered by unit tests. It is not bound to `UsersController`.
 
 ### DTOs
 
-`CreateUserDto` and `UpdateUserDto` live in infrastructure. They are HTTP input shapes, not domain types. `UpdateUserDto` is a `PartialType` of `CreateUserDto`.
+`CreateUserDto` and `UpdateUserDto` live in infrastructure. They are HTTP input shapes, not domain types. `UpdateUserDto` repeats the create fields as optional.
 
 ### Errors
 
