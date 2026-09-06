@@ -3,12 +3,12 @@ import { SingUpUseCase, SingUpUseCaseInput } from '../../singup.usecase';
 import { InMemorySearchableUserRepository } from '../../../../infrastructure/repositories/in-memory-searchable-user.repository';
 import { BadRequestException } from '../../../errors/BadRequestExeption.error';
 import { User, UserRole } from '../../../../domain/entities/user.entity';
-import { BcryptHashProvider } from '../../../../infrastructure/providers/hash-provider/bcrypt.hash.provider';
+import { HashProvider } from 'src/shared/application/providers/hash.provider';
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-class FakeHashProvider implements BcryptHashProvider {
+class FakeHashProvider implements HashProvider {
   generateHash = jest.fn();
   compareHash = jest.fn();
 }

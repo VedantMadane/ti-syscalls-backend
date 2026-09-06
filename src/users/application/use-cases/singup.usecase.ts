@@ -2,7 +2,7 @@ import { Email } from 'src/users/domain/value-objects/email.vo';
 import { BadRequestException } from '../errors/BadRequestExeption.error';
 import { SearchableUserRepository } from 'src/users/domain/repositories/searchable-user.repository';
 import { User } from 'src/users/domain/entities/user.entity';
-import { BcryptHashProvider } from 'src/users/infrastructure/providers/hash-provider/bcrypt.hash.provider';
+import { HashProvider } from 'src/shared/application/providers/hash.provider';
 
 export type SingUpUseCaseInput = {
   name: string;
@@ -20,7 +20,7 @@ export type SingUpUseCaseOutput = {
 export class SingUpUseCase {
   constructor(
     private readonly userRepository: SearchableUserRepository,
-    private readonly hashProvider: BcryptHashProvider,
+    private readonly hashProvider: HashProvider,
   ) {}
   async execute(input: SingUpUseCaseInput): Promise<SingUpUseCaseOutput> {
     if (!input.name || !input.email || !input.password) {
