@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { UsersService } from '../../application/users.service';
+import { UsersService } from '../users.service';
 import { UserRole } from '../../domain/entities/user.entity';
 
 describe('UsersService', () => {
